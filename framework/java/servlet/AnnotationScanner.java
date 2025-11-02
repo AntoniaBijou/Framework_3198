@@ -112,7 +112,7 @@ public class AnnotationScanner {
             }
 
             if (!found) {
-                System.out.println("Aucune annotation @WebRoute trouvée dans le package.");
+                System.out.println("Aucune annotation trouvée dans le package.");
             }
 
         } catch (Exception e) {
