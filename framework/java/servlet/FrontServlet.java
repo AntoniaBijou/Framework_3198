@@ -71,8 +71,7 @@ public class FrontServlet extends HttpServlet {
                 }
             }
         } else {
-            resp.setContentType("text/html; charset=UTF-8");
-            resp.getWriter().println("<h3>Page introuvable : " + path + "</h3>");
+    resp.getWriter().println(path);
         }
     }
 
