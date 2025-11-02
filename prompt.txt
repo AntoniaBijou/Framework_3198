@@ -1,0 +1,13 @@
+Mila fantatra daoly fotsiny ny url ao anatinleh projets de teste 
+Micreer annotation : itenenna andraisana anleh url associena amleh url 
+Micreer annotation : mandray parametre url 
+testena anaty main , 
+verifiena aloha hoe misy le ressource sa tsisy 
+
+----------------------------
+
+On a une mini projet de framework simple en java puis on teste sur projet de teste:
+on a divisé par sprint et on est dans sprint2-bis : 
+Sprint2-bis 
+On a une annotation controller et url , donc on veut faire une methode pour scanner une package 
+puis afficher juste les valeurs de l'annotations , toutes les valeurs qui utilise cette annotations 
