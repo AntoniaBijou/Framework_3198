@@ -71,7 +71,7 @@ public class FrontServlet extends HttpServlet {
                 }
             }
         } else {
-    resp.getWriter().println(path);
+            resp.getWriter().println(path);
         }
     }
 
