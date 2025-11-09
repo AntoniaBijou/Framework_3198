@@ -10,15 +10,45 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class AnnotationScanner {
 
-    /**
-     * Scanne un package et retourne toutes les classes trouvées.
-     */
+    public static Map<String, RouteInfo> scanRoutesForApp(List<String> packagesToScan) {
+        Map<String, RouteInfo> routes = new HashMap<>();
+        System.out.println("=== Scan des routes au demarrage (packages: " + packagesToScan + ") ===");
+
+        for (String packageName : packagesToScan) {
+            try {
+                List<Class<?>> classes = findClassesInPackage(packageName);
+                for (Class<?> clazz : classes) {
+                    if (clazz.isAnnotationPresent(Controller.class)) {  //  VeRIFIE @Controller
+                        System.out.println("Controleur trouve : " + clazz.getSimpleName());
+                        for (Method method : clazz.getDeclaredMethods()) {
+                            WebRoute annotation = method.getAnnotation(WebRoute.class);
+                            if (annotation != null && method.getReturnType() == String.class) {  //  VeRIFIE retour String
+                                String url = annotation.url();
+                                if (!routes.containsKey(url)) {
+                                    routes.put(url, new RouteInfo(clazz, method, url));
+                                    System.out.println("  Route : " + url + " → " + method.getName());
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Erreur scan package " + packageName + " : " + e.getMessage());
+            }
+        }
+
+        System.out.println("Total routes chargees : " + routes.size());
+        return routes;
+    }
+
     public static List<Class<?>> findClassesInPackage(String packageName)
             throws IOException, URISyntaxException, ClassNotFoundException {
 
@@ -30,11 +60,9 @@ public class AnnotationScanner {
         while (resources.hasMoreElements()) {
             URL resource = resources.nextElement();
             if (resource.getProtocol().equals("file")) {
-                // Développement : dossier src
                 Path path = Paths.get(resource.toURI());
                 classes.addAll(scanDirectory(packageName, path));
             } else if (resource.getProtocol().equals("jar")) {
-                // JAR déployé
                 JarURLConnection jarConn = (JarURLConnection) resource.openConnection();
                 try (JarFile jarFile = jarConn.getJarFile()) {
                     classes.addAll(scanJar(packageName, jarFile));
@@ -47,8 +75,7 @@ public class AnnotationScanner {
     private static List<Class<?>> scanDirectory(String packageName, Path directory)
             throws IOException, ClassNotFoundException {
         List<Class<?>> classes = new ArrayList<>();
-        if (!Files.isDirectory(directory))
-            return classes;
+        if (!Files.isDirectory(directory)) return classes;
 
         Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
             @Override
@@ -58,7 +85,6 @@ public class AnnotationScanner {
                     try {
                         classes.add(Class.forName(className));
                     } catch (ClassNotFoundException e) {
-                        // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
                 }
@@ -86,37 +112,5 @@ public class AnnotationScanner {
     private static String buildClassName(String packageName, Path root, Path file) {
         String relative = root.relativize(file).toString();
         return packageName + "." + relative.replace(File.separator, ".").substring(0, relative.length() - 6);
-    }
-
-    // ------------------------------------------------------------------
-    // Méthode principale à appeler
-    // ------------------------------------------------------------------
-    public static void printWebRouteAnnotations(String packageName) {
-        try {
-            List<Class<?>> classes = findClassesInPackage(packageName);
-            System.out.println("=== Scan du package : " + packageName + " ===");
-            boolean found = false;
-
-            for (Class<?> clazz : classes) {
-                for (Method method : clazz.getDeclaredMethods()) {
-                    WebRoute annotation = method.getAnnotation(WebRoute.class);
-                    if (annotation != null) {
-                        found = true;
-                        System.out.println("Classe : " + clazz.getName());
-                        System.out.println("  Méthode : " + method.getName());
-                        System.out.println("  URL     : " + annotation.url());
-                        System.out.println("  ---");
-                    }
-                }
-            }
-
-            if (!found) {
-                System.out.println("Aucune annotation trouvée dans le package.");
-            }
-
-        } catch (Exception e) {
-            System.err.println("Erreur lors du scan : " + e.getMessage());
-            e.printStackTrace();
-        }
     }
 }

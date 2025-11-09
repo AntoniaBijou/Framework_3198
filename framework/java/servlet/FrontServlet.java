@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -11,16 +15,63 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 public class FrontServlet extends HttpServlet {
+    private Map<String, RouteInfo> routeMap;
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        List<String> packagesToScan = Arrays.asList("test.java.controller");
+        routeMap = AnnotationScanner.scanRoutesForApp(packagesToScan);
+    }
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        chercherRessource(req, resp);
+        String path = req.getRequestURI().substring(req.getContextPath().length());
+
+        if ("/".equals(path)) {
+            resp.getWriter().println("Racine de l'app (routes chargees : " + routeMap.size() + ")");
+            return;
+        }
+
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        path = path.replaceAll("/+$", "");
+
+        RouteInfo route = routeMap.get("/" + path);
+        resp.setContentType("text/html; charset=UTF-8");
+
+        if (route != null) {
+            try {
+                Object instance = route.getControllerClass().getDeclaredConstructor().newInstance();
+                Object result = route.getMethod().invoke(instance);
+                resp.getWriter().println("<h1>Route supportee : " + route.getUrl() + "</h1>");
+                resp.getWriter().println("<p>Classe : " + route.getControllerClass().getName() + "</p>");
+                resp.getWriter().println("<p>Methode : " + route.getMethod().getName() + "</p>");
+                if (result instanceof String) {
+                    // resp.getWriter().println("<hr><h2>Resultat :</h2><p>" + result + "</p>");
+                }
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException
+                    | NoSuchMethodException e) {
+                resp.getWriter().println("Erreur invocation : " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            String candidateView = "/WEB-INF/views/" + path;
+            File file = new File(getServletContext().getRealPath(candidateView));
+            if (file.exists() && file.isFile()) {
+                chercherRessource(req, resp);
+                return;
+            }
+            resp.getWriter().println("<h1>Il n'y a pas de route pour l'URL : " + path + "</h1>");
+        }
     }
 
     private void chercherRessource(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
         String path = req.getRequestURI().substring(req.getContextPath().length());
-        
+
         if ("/".equals(path)) {
             resp.getWriter().println("/");
             return;

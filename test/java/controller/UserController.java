@@ -2,19 +2,23 @@ package test.java.controller;
 
 import servlet.WebRoute;
 
+
+import servlet.Controller;
+
+@Controller  
 public class UserController {
 
     @WebRoute(url = "/users")
-    public void listUsers() {
-        System.out.println("Liste des utilisateurs");
+    public String listUsers() {  
+        return "Liste des utilisateurs (vue: users.html)";
     }
 
     @WebRoute(url = "/users/add")
-    public void addUser() {
-        System.out.println("Ajout d'utilisateur");
+    public String addUser() {
+        return "Ajout d'utilisateur (vue: add.html)";
     }
 
-    public void deleteUser() {
-        System.out.println("Suppression (non annotée)");
+    public String deleteUser() {  // Non annotée
+        return "Suppression (non routée)";
     }
 }
