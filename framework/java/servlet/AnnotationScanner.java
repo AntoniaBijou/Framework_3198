@@ -16,21 +16,33 @@ import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 public class AnnotationScanner {
 
     public static Map<String, RouteInfo> scanRoutesForApp(List<String> packagesToScan) {
         Map<String, RouteInfo> routes = new HashMap<>();
-        System.out.println("=== Scan des routes au demarrage (packages: " + packagesToScan + ") ===");
+        System.out.println("=== Scan des routes au démarrage (packages: " + packagesToScan + ") ===");
 
         for (String packageName : packagesToScan) {
             try {
                 List<Class<?>> classes = findClassesInPackage(packageName);
+                System.out.println("DEBUG : Classes trouvées dans '" + packageName + "' : " + classes.size());
                 for (Class<?> clazz : classes) {
-                    if (clazz.isAnnotationPresent(Controller.class)) {  //  VeRIFIE @Controller
-                        System.out.println("Controleur trouve : " + clazz.getSimpleName());
+                    System.out.println("  -> " + clazz.getName());
+                }
+
+                for (Class<?> clazz : classes) {
+                    if (clazz.isAnnotationPresent(Controller.class)) {
+                        System.out.println("Contrôleur trouvé : " + clazz.getSimpleName());
                         for (Method method : clazz.getDeclaredMethods()) {
                             WebRoute annotation = method.getAnnotation(WebRoute.class);
-                            if (annotation != null && method.getReturnType() == String.class) {  //  VeRIFIE retour String
+                            // Vérifie signature (return String, params req + resp)
+                            Class<?>[] params = method.getParameterTypes();
+                            if (annotation != null && method.getReturnType() == String.class &&
+                                params.length == 2 && params[0] == HttpServletRequest.class &&
+                                params[1] == HttpServletResponse.class) {
                                 String url = annotation.url();
                                 if (!routes.containsKey(url)) {
                                     routes.put(url, new RouteInfo(clazz, method, url));
@@ -42,6 +54,7 @@ public class AnnotationScanner {
                 }
             } catch (Exception e) {
                 System.err.println("Erreur scan package " + packageName + " : " + e.getMessage());
+                e.printStackTrace();
             }
         }
 

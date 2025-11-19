@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,12 +45,32 @@ public class FrontServlet extends HttpServlet {
         if (route != null) {
             try {
                 Object instance = route.getControllerClass().getDeclaredConstructor().newInstance();
-                Object result = route.getMethod().invoke(instance);
-                resp.getWriter().println("<h1>Route supportee : " + route.getUrl() + "</h1>");
-                resp.getWriter().println("<p>Classe : " + route.getControllerClass().getName() + "</p>");
-                resp.getWriter().println("<p>Methode : " + route.getMethod().getName() + "</p>");
+                Object result = route.getMethod().invoke(instance, req, resp);
                 if (result instanceof String) {
-                    // resp.getWriter().println("<hr><h2>Resultat :</h2><p>" + result + "</p>");
+                    String viewName = (String) result;
+                    String jspPath = "/WEB-INF/views/" + viewName + ".jsp";
+                    // Vérifiez si le chemin réel existe avant de créer File
+                    String realJspPath = getServletContext().getRealPath(jspPath);
+                    if (realJspPath != null) {
+                        File jspFile = new File(realJspPath);
+                        if (jspFile.exists()) {
+                            RequestDispatcher dispatcher = req.getRequestDispatcher(jspPath);
+                            dispatcher.forward(req, resp);
+                            return;
+                        } else {
+                            // Affichage par défaut si pas de JSP
+                            resp.getWriter().println("<h1>Route supportee : " + route.getUrl() + "</h1>");
+                            resp.getWriter().println("<p>Classe : " + route.getControllerClass().getName() + "</p>");
+                            resp.getWriter().println("<p>Methode : " + route.getMethod().getName() + "</p>");
+                            resp.getWriter().println("<hr><h2>Resultat :</h2><p>" + viewName + "</p>");
+                        }
+                    } else {
+                        // Gestion si getRealPath est null : Affichage simple (pas de fichier réel)
+                        resp.getWriter().println("<h1>Route supportee : " + route.getUrl() + "</h1>");
+                        resp.getWriter().println("<p>Classe : " + route.getControllerClass().getName() + "</p>");
+                        resp.getWriter().println("<p>Methode : " + route.getMethod().getName() + "</p>");
+                        resp.getWriter().println("<hr><h2>Resultat :</h2><p>" + viewName + "</p>");
+                    }
                 }
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException
                     | NoSuchMethodException e) {
@@ -60,7 +81,12 @@ public class FrontServlet extends HttpServlet {
             String candidateView = "/WEB-INF/views/" + path;
             File file = new File(getServletContext().getRealPath(candidateView));
             if (file.exists() && file.isFile()) {
-                chercherRessource(req, resp);
+                if (candidateView.endsWith(".jsp")) {
+                    RequestDispatcher dispatcher = req.getRequestDispatcher(candidateView);
+                    dispatcher.forward(req, resp);
+                } else {
+                    chercherRessource(req, resp);
+                }
                 return;
             }
             resp.getWriter().println("<h1>Il n'y a pas de route pour l'URL : " + path + "</h1>");

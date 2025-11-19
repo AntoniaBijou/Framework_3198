@@ -36,8 +36,16 @@ echo --- Copie du jar dans test/WEB-INF/lib ---
 if not exist "test\WEB-INF\lib" mkdir "test\WEB-INF\lib"
 copy "%JAR_FILE%" "test\WEB-INF\lib\" /Y
 
-echo --- Compilation du projet test (Controllers) ---
-javac -cp "%TOMCAT_HOME%\lib\servlet-api.jar;test\WEB-INF\lib\framework.jar" -d "test\WEB-INF\classes" test\java\controller\UserController.java
+echo --- Compilation du projet test (Controllers + Models) ---
+set TEST_SRC=test\java
+set TEST_CLASSES=test\WEB-INF\classes
+set FILES=
+
+for /R "%TEST_SRC%" %%f in (*.java) do (
+    set FILES=!FILES! "%%f"
+)
+
+javac -cp "%TOMCAT_HOME%\lib\servlet-api.jar;test\WEB-INF\lib\framework.jar" -d "%TEST_CLASSES%" %FILES%
 if %ERRORLEVEL% NEQ 0 (
     echo ERREUR COMPILATION TEST
     exit /b 1
