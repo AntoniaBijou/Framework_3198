@@ -24,3 +24,8 @@ si non : on peut ecrit : il n'y a pas, si oui : on affiche la classe et le metho
 Le code init nleh frontServlet no asina anleh bout de code 
 Atao anaty init aloha zay 
 
+-----------------------------
+sprint4 : 
+    misy fonction de type de retour string : affichena ny valeur anleh string 
+sprint4-bis:
+    Micreer classe , methode miretourne page jsp , ao anatinleh fichier misy contenue de redirigeny directement makany amleh page jsp 

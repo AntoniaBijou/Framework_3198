@@ -49,7 +49,7 @@ public class FrontServlet extends HttpServlet {
                 resp.getWriter().println("<p>Classe : " + route.getControllerClass().getName() + "</p>");
                 resp.getWriter().println("<p>Methode : " + route.getMethod().getName() + "</p>");
                 if (result instanceof String) {
-                    // resp.getWriter().println("<hr><h2>Resultat :</h2><p>" + result + "</p>");
+                    resp.getWriter().println("<hr><h2>Resultat :</h2><p>" + result + "</p>");
                 }
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException
                     | NoSuchMethodException e) {
