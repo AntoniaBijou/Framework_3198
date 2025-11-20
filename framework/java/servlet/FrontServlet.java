@@ -49,31 +49,36 @@ public class FrontServlet extends HttpServlet {
                 if (result instanceof String) {
                     String viewName = (String) result;
                     String jspPath = "/WEB-INF/views/" + viewName + ".jsp";
-                    // Vérifiez si le chemin réel existe avant de créer File
                     String realJspPath = getServletContext().getRealPath(jspPath);
+
                     if (realJspPath != null) {
                         File jspFile = new File(realJspPath);
                         if (jspFile.exists()) {
-                            RequestDispatcher dispatcher = req.getRequestDispatcher(jspPath);
-                            dispatcher.forward(req, resp);
-                            return;
-                        } else {
-                            // Affichage par défaut si pas de JSP
                             resp.getWriter().println("<h1>Route supportee : " + route.getUrl() + "</h1>");
                             resp.getWriter().println("<p>Classe : " + route.getControllerClass().getName() + "</p>");
                             resp.getWriter().println("<p>Methode : " + route.getMethod().getName() + "</p>");
-                            resp.getWriter().println("<hr><h2>Resultat :</h2><p>" + viewName + "</p>");
+                            resp.getWriter().println("<p><strong>Fichier JSP : " + jspPath + "</strong></p>");
+                            resp.getWriter().println("<hr><h2>Contenu du JSP :</h2>");
+
+                            RequestDispatcher dispatcher = req.getRequestDispatcher(jspPath);
+                            dispatcher.include(req, resp); 
+                            return;
+                        } else {
+                            resp.getWriter().println("<h1>Route supportee : " + route.getUrl() + "</h1>");
+                            resp.getWriter().println("<p>Classe : " + route.getControllerClass().getName() + "</p>");
+                            resp.getWriter().println("<p>Methode : " + route.getMethod().getName() + "</p>");
+                            resp.getWriter()
+                                    .println("<p><strong>Fichier JSP : " + jspPath + " (NON TROUVÉ)</strong></p>");
                         }
                     } else {
-                        // Gestion si getRealPath est null : Affichage simple (pas de fichier réel)
                         resp.getWriter().println("<h1>Route supportee : " + route.getUrl() + "</h1>");
                         resp.getWriter().println("<p>Classe : " + route.getControllerClass().getName() + "</p>");
                         resp.getWriter().println("<p>Methode : " + route.getMethod().getName() + "</p>");
-                        resp.getWriter().println("<hr><h2>Resultat :</h2><p>" + viewName + "</p>");
+                        resp.getWriter().println(
+                                "<p><strong>Fichier JSP : " + jspPath + " (CHEMIN NON DISPONIBLE)</strong></p>");
                     }
                 }
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException
-                    | NoSuchMethodException e) {
+            } catch (Exception e) {
                 resp.getWriter().println("Erreur invocation : " + e.getMessage());
                 e.printStackTrace();
             }
