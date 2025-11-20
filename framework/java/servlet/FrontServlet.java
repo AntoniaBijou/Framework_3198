@@ -58,6 +58,7 @@ public class FrontServlet extends HttpServlet {
                             resp.getWriter().println("<p>Classe : " + route.getControllerClass().getName() + "</p>");
                             resp.getWriter().println("<p>Methode : " + route.getMethod().getName() + "</p>");
                             resp.getWriter().println("<p><strong>Fichier JSP : " + jspPath + "</strong></p>");
+
                         } else {
                             resp.getWriter().println("<h1>Route supportee : " + route.getUrl() + "</h1>");
                             resp.getWriter().println("<p>Classe : " + route.getControllerClass().getName() + "</p>");
