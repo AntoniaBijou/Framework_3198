@@ -1,14 +1,10 @@
 package servlet;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
+import java.util.*;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -16,66 +12,68 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 public class FrontServlet extends HttpServlet {
-    private Map<String, RouteInfo> routeMap;
+    private List<RouteInfo> routes;
 
     @Override
     public void init() throws ServletException {
         super.init();
         List<String> packagesToScan = Arrays.asList("test.java.controller");
-        routeMap = AnnotationScanner.scanRoutesForApp(packagesToScan);
+        routes = AnnotationScanner.scanRoutesForApp(packagesToScan);
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String path = req.getRequestURI().substring(req.getContextPath().length());
-
-        if ("/".equals(path)) {
-            resp.getWriter().println("Racine de l'app (routes chargees : " + routeMap.size() + ")");
+        String fullPath = req.getRequestURI().substring(req.getContextPath().length());
+        if ("/".equals(fullPath) || fullPath.isEmpty()) {
+            resp.getWriter().println("Racine de l'app (routes chargees : " + routes.size() + ")");
             return;
         }
+        String path = fullPath.replaceAll("/+$", ""); 
 
-        if (path.startsWith("/")) {
-            path = path.substring(1);
+        RouteInfo matchedRoute = null;
+        Map<String, String> pathVars = null;
+        for (RouteInfo route : routes) {
+            Map<String, String> vars = matchPath(route.getUrl(), path);
+            if (vars != null) {
+                matchedRoute = route;
+                pathVars = vars;
+                break;  
+            }
         }
-        path = path.replaceAll("/+$", "");
 
-        RouteInfo route = routeMap.get("/" + path);
         resp.setContentType("text/html; charset=UTF-8");
-
-        if (route != null) {
+        if (matchedRoute != null) {
             try {
-                Object instance = route.getControllerClass().getDeclaredConstructor().newInstance();
-                Object result = route.getMethod().invoke(instance, req, resp);
+                if (pathVars != null) {
+                    for (Map.Entry<String, String> entry : pathVars.entrySet()) {
+                        req.setAttribute(entry.getKey(), entry.getValue());
+                    }
+                }
+                Object instance = matchedRoute.getControllerClass().getDeclaredConstructor().newInstance();
+                Object result = matchedRoute.getMethod().invoke(instance, req, resp);
                 if (result instanceof String) {
                     String viewName = (String) result;
                     String jspPath = "/WEB-INF/views/" + viewName + ".jsp";
                     String realJspPath = getServletContext().getRealPath(jspPath);
-
+                    resp.getWriter().println("<h1>Route supportee : " + path + "</h1>");
+                    resp.getWriter().println("<p>Classe : " + matchedRoute.getControllerClass().getName() + "</p>");
+                    resp.getWriter().println("<p>Methode : " + matchedRoute.getMethod().getName() + "</p>");
+                    if (pathVars != null && !pathVars.isEmpty()) {
+                        resp.getWriter().println("<p><strong>Variables de chemin : " + pathVars + "</strong></p>");
+                    }
+                    resp.getWriter().println("<p><strong>Fichier JSP : " + jspPath + "</strong></p>");
                     if (realJspPath != null) {
                         File jspFile = new File(realJspPath);
                         if (jspFile.exists()) {
-                            resp.getWriter().println("<h1>Route supportee : " + route.getUrl() + "</h1>");
-                            resp.getWriter().println("<p>Classe : " + route.getControllerClass().getName() + "</p>");
-                            resp.getWriter().println("<p>Methode : " + route.getMethod().getName() + "</p>");
-                            resp.getWriter().println("<p><strong>Fichier JSP : " + jspPath + "</strong></p>");
                             resp.getWriter().println("<hr><h2>Contenu du JSP :</h2>");
-
                             RequestDispatcher dispatcher = req.getRequestDispatcher(jspPath);
-                            dispatcher.include(req, resp); 
+                            dispatcher.include(req, resp);
                             return;
                         } else {
-                            resp.getWriter().println("<h1>Route supportee : " + route.getUrl() + "</h1>");
-                            resp.getWriter().println("<p>Classe : " + route.getControllerClass().getName() + "</p>");
-                            resp.getWriter().println("<p>Methode : " + route.getMethod().getName() + "</p>");
-                            resp.getWriter()
-                                    .println("<p><strong>Fichier JSP : " + jspPath + " (NON TROUVÉ)</strong></p>");
+                            resp.getWriter().println("<p><strong>(Fichier JSP NON TROUVe)</strong></p>");
                         }
                     } else {
-                        resp.getWriter().println("<h1>Route supportee : " + route.getUrl() + "</h1>");
-                        resp.getWriter().println("<p>Classe : " + route.getControllerClass().getName() + "</p>");
-                        resp.getWriter().println("<p>Methode : " + route.getMethod().getName() + "</p>");
-                        resp.getWriter().println(
-                                "<p><strong>Fichier JSP : " + jspPath + " (CHEMIN NON DISPONIBLE)</strong></p>");
+                        resp.getWriter().println("<p><strong>(Chemin JSP NON DISPONIBLE)</strong></p>");
                     }
                 }
             } catch (Exception e) {
@@ -83,58 +81,62 @@ public class FrontServlet extends HttpServlet {
                 e.printStackTrace();
             }
         } else {
-            String candidateView = "/WEB-INF/views/" + path;
-            File file = new File(getServletContext().getRealPath(candidateView));
-            if (file.exists() && file.isFile()) {
-                if (candidateView.endsWith(".jsp")) {
-                    RequestDispatcher dispatcher = req.getRequestDispatcher(candidateView);
+            String cleanPath = path.substring(1);
+            String jspPath = "/WEB-INF/views/" + cleanPath + ".jsp";
+            String realJspPath = getServletContext().getRealPath(jspPath);
+            if (realJspPath != null) {
+                File jspFile = new File(realJspPath);
+                if (jspFile.exists()) {
+                    RequestDispatcher dispatcher = req.getRequestDispatcher(jspPath);
                     dispatcher.forward(req, resp);
-                } else {
-                    chercherRessource(req, resp);
+                    return;
+                }
+            }
+            // Fallback : ressource statique
+            chercherRessource(req, resp, cleanPath, path);
+        }
+    }
+
+    private Map<String, String> matchPath(String pattern, String path) {
+        if (!pattern.startsWith("/")) pattern = "/" + pattern;
+        if (!path.startsWith("/")) path = "/" + path;
+        pattern = pattern.replaceAll("/+$", "");
+        path = path.replaceAll("/+$", "");
+
+        if (path.equals(pattern)) {
+            return new HashMap<>();
+        }
+
+        if (path.startsWith(pattern + "/")) {
+            String rest = path.substring(pattern.length() + 1);
+            if (!rest.contains("/") && !rest.isEmpty()) {
+                Map<String, String> vars = new HashMap<>();
+                vars.put("id", rest);
+                return vars;
+            }
+        }
+        return null;
+    }
+
+    private void chercherRessource(HttpServletRequest req, HttpServletResponse resp, String cleanPath, String originalPath)
+            throws ServletException, IOException {
+        String viewPath = "/WEB-INF/views/" + cleanPath;
+        String realPath = getServletContext().getRealPath(viewPath);
+        if (realPath != null) {
+            File file = new File(realPath);
+            if (file.exists() && file.isFile()) {
+                resp.setContentType("text/html; charset=UTF-8");
+                try (FileInputStream fis = new FileInputStream(file);
+                     OutputStream os = resp.getOutputStream()) {
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = fis.read(buffer)) != -1) {
+                        os.write(buffer, 0, bytesRead);
+                    }
                 }
                 return;
             }
-            resp.getWriter().println("<h1>Il n'y a pas de route pour l'URL : " + path + "</h1>");
         }
+        resp.getWriter().println("<h1>Il n'y a pas de route pour l'URL : " + originalPath + "</h1>");
     }
-
-    private void chercherRessource(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-
-        String path = req.getRequestURI().substring(req.getContextPath().length());
-
-        if ("/".equals(path)) {
-            resp.getWriter().println("/");
-            return;
-        }
-
-        if (path.startsWith("/")) {
-            path = path.substring(1);
-        }
-        String webInfPath = "/WEB-INF/views/";
-        String viewPath;
-        if (path.startsWith("WEB-INF/views/")) {
-            viewPath = "/" + path;
-        } else {
-            viewPath = webInfPath + path;
-        }
-
-        File file = new File(getServletContext().getRealPath(viewPath));
-
-        if (file.exists() && file.isFile()) {
-            resp.setContentType("text/html; charset=UTF-8");
-            try (FileInputStream fis = new FileInputStream(file);
-                    OutputStream os = resp.getOutputStream()) {
-
-                byte[] buffer = new byte[4096];
-                int bytesRead;
-                while ((bytesRead = fis.read(buffer)) != -1) {
-                    os.write(buffer, 0, bytesRead);
-                }
-            }
-        } else {
-            resp.getWriter().println(path);
-        }
-    }
-
 }

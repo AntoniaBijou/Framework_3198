@@ -29,4 +29,6 @@ public class UserController {
         req.setAttribute("dept", dept);
         return "departement";
     }
+
+    
 }
