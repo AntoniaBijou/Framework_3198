@@ -10,9 +10,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -21,33 +19,28 @@ import jakarta.servlet.http.HttpServletResponse;
 
 public class AnnotationScanner {
 
-    public static Map<String, RouteInfo> scanRoutesForApp(List<String> packagesToScan) {
-        Map<String, RouteInfo> routes = new HashMap<>();
+    public static List<RouteInfo> scanRoutesForApp(List<String> packagesToScan) {
+        List<RouteInfo> routes = new ArrayList<>();
         System.out.println("=== Scan des routes au démarrage (packages: " + packagesToScan + ") ===");
-
         for (String packageName : packagesToScan) {
             try {
                 List<Class<?>> classes = findClassesInPackage(packageName);
                 System.out.println("DEBUG : Classes trouvées dans '" + packageName + "' : " + classes.size());
                 for (Class<?> clazz : classes) {
-                    System.out.println("  -> " + clazz.getName());
+                    System.out.println(" -> " + clazz.getName());
                 }
-
                 for (Class<?> clazz : classes) {
                     if (clazz.isAnnotationPresent(Controller.class)) {
                         System.out.println("Contrôleur trouvé : " + clazz.getSimpleName());
                         for (Method method : clazz.getDeclaredMethods()) {
                             WebRoute annotation = method.getAnnotation(WebRoute.class);
-                            // Vérifie signature (return String, params req + resp)
                             Class<?>[] params = method.getParameterTypes();
                             if (annotation != null && method.getReturnType() == String.class &&
-                                params.length == 2 && params[0] == HttpServletRequest.class &&
-                                params[1] == HttpServletResponse.class) {
+                                    params.length == 2 && params[0] == HttpServletRequest.class &&
+                                    params[1] == HttpServletResponse.class) {
                                 String url = annotation.url();
-                                if (!routes.containsKey(url)) {
-                                    routes.put(url, new RouteInfo(clazz, method, url));
-                                    System.out.println("  Route : " + url + " → " + method.getName());
-                                }
+                                routes.add(new RouteInfo(clazz, method, url));
+                                System.out.println(" Route : " + url + " → " + method.getName());
                             }
                         }
                     }
@@ -57,8 +50,7 @@ public class AnnotationScanner {
                 e.printStackTrace();
             }
         }
-
-        System.out.println("Total routes chargees : " + routes.size());
+        System.out.println("Total routes chargées : " + routes.size());
         return routes;
     }
 
@@ -88,7 +80,8 @@ public class AnnotationScanner {
     private static List<Class<?>> scanDirectory(String packageName, Path directory)
             throws IOException, ClassNotFoundException {
         List<Class<?>> classes = new ArrayList<>();
-        if (!Files.isDirectory(directory)) return classes;
+        if (!Files.isDirectory(directory))
+            return classes;
 
         Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
             @Override
