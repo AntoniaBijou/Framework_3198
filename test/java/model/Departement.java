@@ -1,19 +1,25 @@
 package test.java.model;
 
 public class Departement {
-    private int id;
-    private String libelle;
+    private int id_departement;
+    private String nom;
 
-    public Departement(int id, String libelle) {
-        this.id = id;
-        this.libelle = libelle;
+    public Departement(int id_departement, String nom) {
+        this.id_departement = id_departement;
+        this.nom = nom;
     }
-
     public int getId() {
-        return id;
+        return id_departement;
+    }
+    public void setId(int id_departement) {
+        this.id_departement = id_departement;
+    }
+    public String getLibelle() {
+        return nom;
+    }
+    public void setLibelle(String nom) {
+        this.nom = nom;
     }
 
-    public String getLibelle() {
-        return libelle;
-    }
+
 }
