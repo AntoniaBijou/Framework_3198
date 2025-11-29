@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.*;
@@ -66,13 +65,13 @@ public class FrontServlet extends HttpServlet {
                 Method method = matchedRoute.getMethod();
                 Parameter[] params = method.getParameters();
                 List<Object> invokeArgs = new ArrayList<>();
-                Map<String, Object> injectedParams = new HashMap<>(); // Optionnel : pour afficher les params injectés
+                Map<String, Object> injectedParams = new HashMap<>(); // Optionnel : pour afficher les params injectes
                 for (int i = 0; i < params.length - 2; i++) {
                     Parameter p = params[i];
                     String paramName = p.getName();
                     String valStr = req.getParameter(paramName);
                     if (valStr == null) {
-                        throw new IllegalArgumentException("Paramètre manquant : " + paramName);
+                        throw new IllegalArgumentException("Parametre manquant : " + paramName);
                     }
                     Class<?> type = p.getType();
                     Object val;
@@ -81,7 +80,7 @@ public class FrontServlet extends HttpServlet {
                     } else if (type == int.class || type == Integer.class) {
                         val = Integer.parseInt(valStr);
                     } else {
-                        throw new IllegalArgumentException("Type non supporté : " + type);
+                        throw new IllegalArgumentException("Type non supporte : " + type);
                     }
                     invokeArgs.add(val);
                     injectedParams.put(paramName, val);
@@ -98,7 +97,7 @@ public class FrontServlet extends HttpServlet {
                     resp.getWriter().println("<p>Methode : " + matchedRoute.getMethod().getName() + "</p>");
                     if (!injectedParams.isEmpty()) {
                         resp.getWriter()
-                                .println("<p><strong>Paramètres injectés : " + injectedParams + "</strong></p>");
+                                .println("<p><strong>Parametres injectes : " + injectedParams + "</strong></p>");
                     }
                     if (pathVars != null && !pathVars.isEmpty()) {
                         resp.getWriter().println("<p><strong>Variables de chemin : " + pathVars + "</strong></p>");

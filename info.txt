@@ -31,6 +31,8 @@ sprint4-bis et 5:
     Micreer classe , methode miretourne page jsp , ao anatinleh fichier misy contenue de redirigeny directement makany amleh page jsp
 
 sprint4 bis : 
+
+
 -----------------------------------
 sprint6:
 on cree une page jsp formulaireDepartement.jsp : ayant une formulaire : id_departement , nom , puis une btn valider (methode GET ou POST)

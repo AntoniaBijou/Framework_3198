@@ -33,7 +33,7 @@ public class AnnotationScanner {
                 }
                 for (Class<?> clazz : classes) {
                     if (clazz.isAnnotationPresent(Controller.class)) {
-                        System.out.println("Contrôleur trouve : " + clazz.getSimpleName());
+                        System.out.println("Controleur trouve : " + clazz.getSimpleName());
                         for (Method method : clazz.getDeclaredMethods()) {
                             WebRoute annotation = method.getAnnotation(WebRoute.class);
                             if (annotation != null) {

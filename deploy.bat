@@ -23,7 +23,7 @@ for /R "%SRC_DIR%" %%f in (*.java) do (
     set FILES=!FILES! "%%f"
 )
 
-javac -cp "%TOMCAT_HOME%\lib\servlet-api.jar" -d "%BUILD_DIR%" %FILES%
+javac -parameters -cp "%TOMCAT_HOME%\lib\servlet-api.jar" -d "%BUILD_DIR%" %FILES%
 if %ERRORLEVEL% NEQ 0 (
     echo ERREUR COMPILATION FRAMEWORK
     exit /b 1
@@ -45,7 +45,7 @@ for /R "%TEST_SRC%" %%f in (*.java) do (
     set FILES=!FILES! "%%f"
 )
 
-javac -cp "%TOMCAT_HOME%\lib\servlet-api.jar;test\WEB-INF\lib\framework.jar" -d "%TEST_CLASSES%" %FILES%
+javac -parameters -cp "%TOMCAT_HOME%\lib\servlet-api.jar;test\WEB-INF\lib\framework.jar" -d "%TEST_CLASSES%" %FILES%
 if %ERRORLEVEL% NEQ 0 (
     echo ERREUR COMPILATION TEST
     exit /b 1
