@@ -1,9 +1,9 @@
 package test.java.controller;
 
 import servlet.Controller;
-import servlet.PathVariable;
-import servlet.RequestParam;
 import servlet.WebRoute;
+import servlet.RequestParam;
+import servlet.PathVariable;
 import test.java.model.Departement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,7 +13,7 @@ public class DepartementController {
 
     @WebRoute(url = "/departement/insert")
     public String showInsertForm(HttpServletRequest req, HttpServletResponse resp) {
-        return "formulaireDepartement";
+        return "formulaireDepartement";  
     }
 
     // Avec @RequestParam
@@ -21,26 +21,29 @@ public class DepartementController {
     public String saveDepartement(
             @RequestParam("id_departement") int idDept,
             @RequestParam("nom") String nomDept,
-            HttpServletRequest req,
+            HttpServletRequest req, 
             HttpServletResponse resp) {
-
+        
         Departement dept = new Departement(idDept, nomDept);
         req.setAttribute("dept", dept);
-        return "departement";
+        return "departement";  
     }
 
-    // NOUVEAU : Avec @PathVariable pour URL dynamique
+    //  NOUVEAU : Avec @PathVariable pour URL dynamique
     @WebRoute(url = "/departement/{id}")
     public String getDepartementById(
             @PathVariable("id") int id,
             HttpServletRequest req, 
             HttpServletResponse resp) {
         
+        // Simuler une recherche par ID
         Departement dept = new Departement(id, "Departement #" + id);
         req.setAttribute("dept", dept);
         return "departement";
     }
 
+
+    // Route statique (toujours fonctionnelle)
     @WebRoute(url = "/departement")
     public String getDepartement(HttpServletRequest req, HttpServletResponse resp) {
         Departement dept = new Departement(1, "IT Department");

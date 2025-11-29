@@ -48,3 +48,4 @@ get (int id_departement, String nom) {
 
 cette id_departement et nom doivent pareil de l' argument de la fonction (la fonction ci-dessus) 
 puis remplacer la valeur de l' id_departement et nom (en argument) par la velur de l'input depuis le formulaire.
+

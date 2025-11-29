@@ -13,7 +13,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-
 public class FrontServlet extends HttpServlet {
     private List<RouteInfo> routes;
 
@@ -52,6 +51,7 @@ public class FrontServlet extends HttpServlet {
                 pathVars = vars;
                 break;
             }
+
         }
 
         resp.setContentType("text/html; charset=UTF-8");
@@ -75,12 +75,13 @@ public class FrontServlet extends HttpServlet {
                     Object val = null;
                     boolean isPathVariable = false;
 
+                    // Vérifier si c'est un @PathVariable
                     PathVariable pathVariable = p.getAnnotation(PathVariable.class);
                     if (pathVariable != null) {
                         paramName = pathVariable.value();
                         isPathVariable = true;
 
-                        // Recuperer depuis pathVars
+                        // Récupérer depuis pathVars
                         if (pathVars != null && pathVars.containsKey(paramName)) {
                             String valStr = pathVars.get(paramName);
                             Class<?> type = p.getType();
@@ -90,36 +91,40 @@ public class FrontServlet extends HttpServlet {
                             } else if (type == int.class || type == Integer.class) {
                                 val = Integer.parseInt(valStr);
                             } else {
-                                throw new IllegalArgumentException("Type non supporte pour @PathVariable : " + type);
+                                throw new IllegalArgumentException("Type non supporté pour @PathVariable : " + type);
                             }
                         } else {
                             throw new IllegalArgumentException("Variable de chemin manquante : " + paramName);
                         }
                     } else {
-                        // Verifier si c'est un @RequestParam
+                        // Vérifier si c'est un @RequestParam
                         RequestParam requestParam = p.getAnnotation(RequestParam.class);
                         if (requestParam != null) {
                             paramName = requestParam.value();
                         } else {
                             paramName = p.getName();
                         }
-                        // Recuperer depuis les paramètres de requête
+
+                        // Récupérer depuis les paramètres de requête
                         String valStr = req.getParameter(paramName);
                         if (valStr == null) {
-                            throw new IllegalArgumentException("Parametre manquant : " + paramName);
+                            throw new IllegalArgumentException("Paramètre manquant : " + paramName);
                         }
+
                         Class<?> type = p.getType();
                         if (type == String.class) {
                             val = valStr;
                         } else if (type == int.class || type == Integer.class) {
                             val = Integer.parseInt(valStr);
                         } else {
-                            throw new IllegalArgumentException("Type non supporte : " + type);
+                            throw new IllegalArgumentException("Type non supporté : " + type);
                         }
                     }
+
                     invokeArgs.add(val);
                     injectedParams.put(paramName, val);
                 }
+
                 invokeArgs.add(req);
                 invokeArgs.add(resp);
 
@@ -181,27 +186,41 @@ public class FrontServlet extends HttpServlet {
         pattern = pattern.replaceAll("/+$", "");
         path = path.replaceAll("/+$", "");
 
+        // Vérifier d'abord une correspondance exacte (routes statiques)
+        if (path.equals(pattern)) {
+            return new HashMap<>();
+        }
+
         // Extraire les noms des variables de pattern (ex: {id}, {nom})
         List<String> varNames = new ArrayList<>();
         String regex = pattern;
 
-        // Remplacer {variable} par un groupe de capture
+        // Vérifier si le pattern contient des variables dynamiques
         java.util.regex.Pattern varPattern = java.util.regex.Pattern.compile("\\{([^}]+)\\}");
         java.util.regex.Matcher varMatcher = varPattern.matcher(pattern);
 
+        boolean hasDynamicParts = false;
         while (varMatcher.find()) {
             varNames.add(varMatcher.group(1)); // Stocker le nom de la variable
+            hasDynamicParts = true;
+        }
+
+        // Si pas de partie dynamique et pas de match exact, retourner null
+        if (!hasDynamicParts) {
+            return null;
         }
 
         // Convertir le pattern en regex : /departement/{id} -> /departement/([^/]+)
         regex = regex.replaceAll("\\{[^}]+\\}", "([^/]+)");
         regex = "^" + regex + "$";
 
+        // Matcher le path avec le pattern
         java.util.regex.Pattern pathPattern = java.util.regex.Pattern.compile(regex);
         java.util.regex.Matcher pathMatcher = pathPattern.matcher(path);
 
         if (pathMatcher.matches()) {
             Map<String, String> vars = new HashMap<>();
+            // Extraire les valeurs capturées
             for (int i = 0; i < varNames.size(); i++) {
                 vars.put(varNames.get(i), pathMatcher.group(i + 1));
             }

@@ -13,12 +13,21 @@ public class RouteInfo {
         this.url = url;
     }
 
-    public Class<?> getControllerClass() { return controllerClass; }
-    public Method getMethod() { return method; }
-    public String getUrl() { return url; }
+    public Class<?> getControllerClass() { 
+        return controllerClass; 
+    }
+    
+    public Method getMethod() { 
+        return method; 
+    }
+    
+    public String getUrl() { 
+        return url; 
+    }
+
 
     @Override
     public String toString() {
-        return "RouteInfo{url='" + url + "', class=" + controllerClass.getSimpleName() + ", method=" + method.getName() + "}";
+        return "RouteInfo{url='" + url + "', method=" + method.getName() + "}";
     }
 }
