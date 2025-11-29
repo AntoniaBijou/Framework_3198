@@ -1,7 +1,6 @@
 package test.java.controller;
 
 import servlet.WebRoute;
-import test.java.model.Departement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import servlet.Controller;
@@ -23,12 +22,4 @@ public class UserController {
         return "Suppression (non routée)";
     }
 
-    @WebRoute(url = "/departement")
-    public String getDepartement(HttpServletRequest req, HttpServletResponse resp) {
-        Departement dept = new Departement(1, "IT Department");
-        req.setAttribute("dept", dept);
-        return "departement";
-    }
-
-    
 }

@@ -31,3 +31,20 @@ sprint4-bis et 5:
     Micreer classe , methode miretourne page jsp , ao anatinleh fichier misy contenue de redirigeny directement makany amleh page jsp
 
 sprint4 bis : 
+
+
+-----------------------------------
+sprint6:
+on cree une page jsp formulaireDepartement.jsp : ayant une formulaire : id_departement , nom , puis une btn valider (methode GET ou POST)
+
+exemple : insert-departement
+url : /departement/save
+
+DepartementController : 
+Url("/departement/save") 
+get (int id_departement, String nom) {
+	cette id_departement et nom sont le " name " de l'input dans le formulaire
+} 
+
+cette id_departement et nom doivent pareil de l' argument de la fonction (la fonction ci-dessus) 
+puis remplacer la valeur de l' id_departement et nom (en argument) par la velur de l'input depuis le formulaire.
