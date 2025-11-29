@@ -65,10 +65,20 @@ public class FrontServlet extends HttpServlet {
                 Method method = matchedRoute.getMethod();
                 Parameter[] params = method.getParameters();
                 List<Object> invokeArgs = new ArrayList<>();
-                Map<String, Object> injectedParams = new HashMap<>(); // Optionnel : pour afficher les params injectes
+                Map<String, Object> injectedParams = new HashMap<>(); // pour afficher les params injectes
                 for (int i = 0; i < params.length - 2; i++) {
                     Parameter p = params[i];
                     String paramName = p.getName();
+                    // Vérifier si le paramètre a l'annotation @RequestParam
+                    RequestParam requestParam = p.getAnnotation(RequestParam.class);
+                    if (requestParam != null) {
+                        // Utiliser la valeur de l'annotation
+                        paramName = requestParam.value();
+                    } else {
+                        // Utiliser le nom du paramètre 
+                        paramName = p.getName();
+                    }
+
                     String valStr = req.getParameter(paramName);
                     if (valStr == null) {
                         throw new IllegalArgumentException("Parametre manquant : " + paramName);
@@ -87,6 +97,7 @@ public class FrontServlet extends HttpServlet {
                 }
                 invokeArgs.add(req);
                 invokeArgs.add(resp);
+                
                 Object result = method.invoke(instance, invokeArgs.toArray());
                 if (result instanceof String) {
                     String viewName = (String) result;
