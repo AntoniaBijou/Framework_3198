@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+
 public class FrontServlet extends HttpServlet {
     private List<RouteInfo> routes;
 
@@ -63,41 +64,65 @@ public class FrontServlet extends HttpServlet {
                 }
                 Object instance = matchedRoute.getControllerClass().getDeclaredConstructor().newInstance();
                 Method method = matchedRoute.getMethod();
+
                 Parameter[] params = method.getParameters();
                 List<Object> invokeArgs = new ArrayList<>();
-                Map<String, Object> injectedParams = new HashMap<>(); // pour afficher les params injectes
+                Map<String, Object> injectedParams = new HashMap<>();
+
                 for (int i = 0; i < params.length - 2; i++) {
                     Parameter p = params[i];
-                    String paramName = p.getName();
-                    // Vérifier si le paramètre a l'annotation @RequestParam
-                    RequestParam requestParam = p.getAnnotation(RequestParam.class);
-                    if (requestParam != null) {
-                        // Utiliser la valeur de l'annotation
-                        paramName = requestParam.value();
-                    } else {
-                        // Utiliser le nom du paramètre 
-                        paramName = p.getName();
-                    }
+                    String paramName;
+                    Object val = null;
+                    boolean isPathVariable = false;
 
-                    String valStr = req.getParameter(paramName);
-                    if (valStr == null) {
-                        throw new IllegalArgumentException("Parametre manquant : " + paramName);
-                    }
-                    Class<?> type = p.getType();
-                    Object val;
-                    if (type == String.class) {
-                        val = valStr;
-                    } else if (type == int.class || type == Integer.class) {
-                        val = Integer.parseInt(valStr);
+                    PathVariable pathVariable = p.getAnnotation(PathVariable.class);
+                    if (pathVariable != null) {
+                        paramName = pathVariable.value();
+                        isPathVariable = true;
+
+                        // Recuperer depuis pathVars
+                        if (pathVars != null && pathVars.containsKey(paramName)) {
+                            String valStr = pathVars.get(paramName);
+                            Class<?> type = p.getType();
+
+                            if (type == String.class) {
+                                val = valStr;
+                            } else if (type == int.class || type == Integer.class) {
+                                val = Integer.parseInt(valStr);
+                            } else {
+                                throw new IllegalArgumentException("Type non supporte pour @PathVariable : " + type);
+                            }
+                        } else {
+                            throw new IllegalArgumentException("Variable de chemin manquante : " + paramName);
+                        }
                     } else {
-                        throw new IllegalArgumentException("Type non supporte : " + type);
+                        // Verifier si c'est un @RequestParam
+                        RequestParam requestParam = p.getAnnotation(RequestParam.class);
+                        if (requestParam != null) {
+                            paramName = requestParam.value();
+                        } else {
+                            paramName = p.getName();
+                        }
+                        // Recuperer depuis les paramètres de requête
+                        String valStr = req.getParameter(paramName);
+                        if (valStr == null) {
+                            throw new IllegalArgumentException("Parametre manquant : " + paramName);
+                        }
+                        Class<?> type = p.getType();
+                        if (type == String.class) {
+                            val = valStr;
+                        } else if (type == int.class || type == Integer.class) {
+                            val = Integer.parseInt(valStr);
+                        } else {
+                            throw new IllegalArgumentException("Type non supporte : " + type);
+                        }
                     }
                     invokeArgs.add(val);
                     injectedParams.put(paramName, val);
                 }
                 invokeArgs.add(req);
                 invokeArgs.add(resp);
-                
+
                 Object result = method.invoke(instance, invokeArgs.toArray());
                 if (result instanceof String) {
                     String viewName = (String) result;
@@ -156,18 +181,33 @@ public class FrontServlet extends HttpServlet {
         pattern = pattern.replaceAll("/+$", "");
         path = path.replaceAll("/+$", "");
 
-        if (path.equals(pattern)) {
-            return new HashMap<>();
+        // Extraire les noms des variables de pattern (ex: {id}, {nom})
+        List<String> varNames = new ArrayList<>();
+        String regex = pattern;
+
+        // Remplacer {variable} par un groupe de capture
+        java.util.regex.Pattern varPattern = java.util.regex.Pattern.compile("\\{([^}]+)\\}");
+        java.util.regex.Matcher varMatcher = varPattern.matcher(pattern);
+
+        while (varMatcher.find()) {
+            varNames.add(varMatcher.group(1)); // Stocker le nom de la variable
         }
 
-        if (path.startsWith(pattern + "/")) {
-            String rest = path.substring(pattern.length() + 1);
-            if (!rest.contains("/") && !rest.isEmpty()) {
-                Map<String, String> vars = new HashMap<>();
-                vars.put("id", rest);
-                return vars;
+        // Convertir le pattern en regex : /departement/{id} -> /departement/([^/]+)
+        regex = regex.replaceAll("\\{[^}]+\\}", "([^/]+)");
+        regex = "^" + regex + "$";
+
+        java.util.regex.Pattern pathPattern = java.util.regex.Pattern.compile(regex);
+        java.util.regex.Matcher pathMatcher = pathPattern.matcher(path);
+
+        if (pathMatcher.matches()) {
+            Map<String, String> vars = new HashMap<>();
+            for (int i = 0; i < varNames.size(); i++) {
+                vars.put(varNames.get(i), pathMatcher.group(i + 1));
             }
+            return vars;
         }
+
         return null;
     }
 
