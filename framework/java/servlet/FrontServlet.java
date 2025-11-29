@@ -13,7 +13,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-
 public class FrontServlet extends HttpServlet {
     private List<RouteInfo> routes;
 
@@ -42,16 +41,18 @@ public class FrontServlet extends HttpServlet {
             return;
         }
         String path = fullPath.replaceAll("/+$", "");
+        String requestMethod = req.getMethod().toUpperCase();
 
         RouteInfo matchedRoute = null;
         Map<String, String> pathVars = null;
         for (RouteInfo route : routes) {
             Map<String, String> vars = matchPath(route.getUrl(), path);
-            if (vars != null) {
+            if (vars != null && route.getHttpMethod().equals(requestMethod)) {
                 matchedRoute = route;
                 pathVars = vars;
                 break;
             }
+
         }
 
         resp.setContentType("text/html; charset=UTF-8");
@@ -131,6 +132,7 @@ public class FrontServlet extends HttpServlet {
                     resp.getWriter().println("<h1>Route supportee : " + path + "</h1>");
                     resp.getWriter().println("<p>Classe : " + matchedRoute.getControllerClass().getName() + "</p>");
                     resp.getWriter().println("<p>Methode : " + matchedRoute.getMethod().getName() + "</p>");
+                    resp.getWriter().println("<p>HTTP Method : " + matchedRoute.getHttpMethod() + "</p>");
                     if (!injectedParams.isEmpty()) {
                         resp.getWriter()
                                 .println("<p><strong>Parametres injectes : " + injectedParams + "</strong></p>");

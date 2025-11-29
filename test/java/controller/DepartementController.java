@@ -11,13 +11,12 @@ import jakarta.servlet.http.HttpServletResponse;
 @Controller
 public class DepartementController {
 
-    @WebRoute(url = "/departement/insert")
+    @WebRoute(url = "/departement/insert", method = "GET")
     public String showInsertForm(HttpServletRequest req, HttpServletResponse resp) {
         return "formulaireDepartement";
     }
 
-    // Avec @RequestParam
-    @WebRoute(url = "/departement/save")
+    @WebRoute(url = "/departement/save", method = "POST")
     public String saveDepartement(
             @RequestParam("id_departement") int idDept,
             @RequestParam("nom") String nomDept,
@@ -26,22 +25,35 @@ public class DepartementController {
 
         Departement dept = new Departement(idDept, nomDept);
         req.setAttribute("dept", dept);
+        req.setAttribute("message", "Departement cree avec succes !");
         return "departement";
     }
 
-    // NOUVEAU : Avec @PathVariable pour URL dynamique
-    @WebRoute(url = "/departement/{id}")
+    @WebRoute(url = "/departement/{id}", method = "GET")
     public String getDepartementById(
             @PathVariable("id") int id,
-            HttpServletRequest req, 
+            HttpServletRequest req,
             HttpServletResponse resp) {
-        
+
         Departement dept = new Departement(id, "Departement #" + id);
         req.setAttribute("dept", dept);
         return "departement";
     }
 
-    @WebRoute(url = "/departement")
+    @WebRoute(url = "/departement/{id}", method = "POST")
+    public String updateDepartementById(
+            @PathVariable("id") int id,
+            @RequestParam("nom") String nouveauNom,
+            HttpServletRequest req,
+            HttpServletResponse resp) {
+
+        Departement dept = new Departement(id, nouveauNom);
+        req.setAttribute("dept", dept);
+        req.setAttribute("message", "Departement #" + id + " mis à jour !");
+        return "departement";
+    }
+
+    @WebRoute(url = "/departement", method = "GET")
     public String getDepartement(HttpServletRequest req, HttpServletResponse resp) {
         Departement dept = new Departement(1, "IT Department");
         req.setAttribute("dept", dept);
