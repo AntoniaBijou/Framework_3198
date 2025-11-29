@@ -3,12 +3,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Formulaire Département</title>
+    <title>Formulaire Departement</title>
 </head>
 <body>
-    <h1>Insérer un Département</h1>
+    <h1>Inserer un Departement</h1>
     <form action="${pageContext.request.contextPath}/departement/save" method="post">
-        <label for="id_departement">ID Département :</label>
+        <label for="id_departement">ID Departement :</label>
         <input type="number" id="id_departement" name="id_departement" required><br><br>
         
         <label for="nom">Nom :</label>
