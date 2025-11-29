@@ -39,9 +39,7 @@ public class AnnotationScanner {
                             if (annotation != null) {
                                 if (validateMethodSignature(method)) {
                                     String url = annotation.url();
-                                    String httpMethod = annotation.method().toUpperCase(); // GET ou POST
-                                    routes.add(new RouteInfo(clazz, method, url, httpMethod));
-                                    System.out.println(" Route : " + httpMethod + " " + url + " → " + method.getName());
+                                    routes.add(new RouteInfo(clazz, method, url));
                                 } else {
                                     System.err.println(
                                             "Methode invalide : " + method.getName() + " (signature incorrecte)");
@@ -56,7 +54,9 @@ public class AnnotationScanner {
             }
         }
 
-        routes.sort(Comparator.comparingInt((RouteInfo r) -> r.getUrl().length()).reversed());
+        Comparator<Object> comparator = Comparator.comparingInt(r -> ((RouteInfo) r).getUrl().length()).reversed();
+        comparator = comparator.thenComparingInt(r -> ((RouteInfo) r).getUrl().contains("{") ? 1 : 0);
+        routes.sort(comparator);
         System.out.println("Total routes chargees : " + routes.size());
         return routes;
     }

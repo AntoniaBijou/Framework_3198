@@ -6,13 +6,11 @@ public class RouteInfo {
     private final Class<?> controllerClass;
     private final Method method;
     private final String url;
-    private final String httpMethod; 
 
-    public RouteInfo(Class<?> controllerClass, Method method, String url, String httpMethod) {
+    public RouteInfo(Class<?> controllerClass, Method method, String url) {
         this.controllerClass = controllerClass;
         this.method = method;
         this.url = url;
-        this.httpMethod = httpMethod;
     }
 
     public Class<?> getControllerClass() { 
@@ -26,14 +24,10 @@ public class RouteInfo {
     public String getUrl() { 
         return url; 
     }
-    
-    public String getHttpMethod() { 
-        return httpMethod; 
-    }
+
 
     @Override
     public String toString() {
-        return "RouteInfo{url='" + url + "', httpMethod='" + httpMethod + "', class=" + 
-               controllerClass.getSimpleName() + ", method=" + method.getName() + "}";
+        return "RouteInfo{url='" + url + "', method=" + method.getName() + "}";
     }
 }
