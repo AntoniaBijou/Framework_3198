@@ -41,17 +41,17 @@ public class FrontServlet extends HttpServlet {
             return;
         }
         String path = fullPath.replaceAll("/+$", "");
+        String requestMethod = req.getMethod().toUpperCase();
 
         RouteInfo matchedRoute = null;
         Map<String, String> pathVars = null;
         for (RouteInfo route : routes) {
             Map<String, String> vars = matchPath(route.getUrl(), path);
-            if (vars != null) {
+            if (vars != null && route.getHttpMethod().equals(requestMethod)) {
                 matchedRoute = route;
                 pathVars = vars;
                 break;
             }
-
         }
 
         resp.setContentType("text/html; charset=UTF-8");
@@ -75,13 +75,12 @@ public class FrontServlet extends HttpServlet {
                     Object val = null;
                     boolean isPathVariable = false;
 
-                    // Vérifier si c'est un @PathVariable
                     PathVariable pathVariable = p.getAnnotation(PathVariable.class);
                     if (pathVariable != null) {
                         paramName = pathVariable.value();
                         isPathVariable = true;
 
-                        // Récupérer depuis pathVars
+                        // Recuperer depuis pathVars
                         if (pathVars != null && pathVars.containsKey(paramName)) {
                             String valStr = pathVars.get(paramName);
                             Class<?> type = p.getType();
@@ -91,40 +90,36 @@ public class FrontServlet extends HttpServlet {
                             } else if (type == int.class || type == Integer.class) {
                                 val = Integer.parseInt(valStr);
                             } else {
-                                throw new IllegalArgumentException("Type non supporté pour @PathVariable : " + type);
+                                throw new IllegalArgumentException("Type non supporte pour @PathVariable : " + type);
                             }
                         } else {
                             throw new IllegalArgumentException("Variable de chemin manquante : " + paramName);
                         }
                     } else {
-                        // Vérifier si c'est un @RequestParam
+                        // Verifier si c'est un @RequestParam
                         RequestParam requestParam = p.getAnnotation(RequestParam.class);
                         if (requestParam != null) {
                             paramName = requestParam.value();
                         } else {
                             paramName = p.getName();
                         }
-
-                        // Récupérer depuis les paramètres de requête
+                        // Recuperer depuis les paramètres de requête
                         String valStr = req.getParameter(paramName);
                         if (valStr == null) {
-                            throw new IllegalArgumentException("Paramètre manquant : " + paramName);
+                            throw new IllegalArgumentException("Parametre manquant : " + paramName);
                         }
-
                         Class<?> type = p.getType();
                         if (type == String.class) {
                             val = valStr;
                         } else if (type == int.class || type == Integer.class) {
                             val = Integer.parseInt(valStr);
                         } else {
-                            throw new IllegalArgumentException("Type non supporté : " + type);
+                            throw new IllegalArgumentException("Type non supporte : " + type);
                         }
                     }
-
                     invokeArgs.add(val);
                     injectedParams.put(paramName, val);
                 }
-
                 invokeArgs.add(req);
                 invokeArgs.add(resp);
 
@@ -136,6 +131,7 @@ public class FrontServlet extends HttpServlet {
                     resp.getWriter().println("<h1>Route supportee : " + path + "</h1>");
                     resp.getWriter().println("<p>Classe : " + matchedRoute.getControllerClass().getName() + "</p>");
                     resp.getWriter().println("<p>Methode : " + matchedRoute.getMethod().getName() + "</p>");
+                    resp.getWriter().println("<p>HTTP Method : " + matchedRoute.getHttpMethod() + "</p>");
                     if (!injectedParams.isEmpty()) {
                         resp.getWriter()
                                 .println("<p><strong>Parametres injectes : " + injectedParams + "</strong></p>");
@@ -186,41 +182,27 @@ public class FrontServlet extends HttpServlet {
         pattern = pattern.replaceAll("/+$", "");
         path = path.replaceAll("/+$", "");
 
-        // Vérifier d'abord une correspondance exacte (routes statiques)
-        if (path.equals(pattern)) {
-            return new HashMap<>();
-        }
-
         // Extraire les noms des variables de pattern (ex: {id}, {nom})
         List<String> varNames = new ArrayList<>();
         String regex = pattern;
 
-        // Vérifier si le pattern contient des variables dynamiques
+        // Remplacer {variable} par un groupe de capture
         java.util.regex.Pattern varPattern = java.util.regex.Pattern.compile("\\{([^}]+)\\}");
         java.util.regex.Matcher varMatcher = varPattern.matcher(pattern);
 
-        boolean hasDynamicParts = false;
         while (varMatcher.find()) {
             varNames.add(varMatcher.group(1)); // Stocker le nom de la variable
-            hasDynamicParts = true;
-        }
-
-        // Si pas de partie dynamique et pas de match exact, retourner null
-        if (!hasDynamicParts) {
-            return null;
         }
 
         // Convertir le pattern en regex : /departement/{id} -> /departement/([^/]+)
         regex = regex.replaceAll("\\{[^}]+\\}", "([^/]+)");
         regex = "^" + regex + "$";
 
-        // Matcher le path avec le pattern
         java.util.regex.Pattern pathPattern = java.util.regex.Pattern.compile(regex);
         java.util.regex.Matcher pathMatcher = pathPattern.matcher(path);
 
         if (pathMatcher.matches()) {
             Map<String, String> vars = new HashMap<>();
-            // Extraire les valeurs capturées
             for (int i = 0; i < varNames.size(); i++) {
                 vars.put(varNames.get(i), pathMatcher.group(i + 1));
             }
