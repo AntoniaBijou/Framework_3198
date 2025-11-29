@@ -1,6 +1,7 @@
 package test.java.controller;
 
 import servlet.Controller;
+import servlet.PathVariable;
 import servlet.RequestParam;
 import servlet.WebRoute;
 import test.java.model.Departement;
@@ -15,6 +16,7 @@ public class DepartementController {
         return "formulaireDepartement";
     }
 
+    // Avec @RequestParam
     @WebRoute(url = "/departement/save")
     public String saveDepartement(
             @RequestParam("id_departement") int idDept,
@@ -23,6 +25,18 @@ public class DepartementController {
             HttpServletResponse resp) {
 
         Departement dept = new Departement(idDept, nomDept);
+        req.setAttribute("dept", dept);
+        return "departement";
+    }
+
+    // NOUVEAU : Avec @PathVariable pour URL dynamique
+    @WebRoute(url = "/departement/{id}")
+    public String getDepartementById(
+            @PathVariable("id") int id,
+            HttpServletRequest req, 
+            HttpServletResponse resp) {
+        
+        Departement dept = new Departement(id, "Departement #" + id);
         req.setAttribute("dept", dept);
         return "departement";
     }
