@@ -1,3 +1,4 @@
 test/WEB-INF/lib/framework.jar
 *.jar
 *.jar
+*.jar
