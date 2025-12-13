@@ -12,5 +12,6 @@
     <% } %>
     <p>ID : ${dept.id_departement}</p>
     <p>Libelle : ${dept.nom}</p>
+
 </body>
 </html>
