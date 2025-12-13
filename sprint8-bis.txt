@@ -1,0 +1,9 @@
+Maintenant , on va passer au sprint-8-bis : 
+ce qu'on va faire c'est : 
+coté test : 
+creer une model Employe ayant une id_employe et nom , puis une Departement ( pas de id_departement mais Departement departement)
+puis creer une formulaire pour creer une employé avec son dept puis une btn enrgistrer 
+le resultats est d'avoir une tableau d'employé avec son departement (Employé , Département)
+
+=> Maintenant l'interet c'est comment gerer s'il y a une Objet Departement  dans la model Employe depuis mon framework 
+Donc , implementer tous ça 

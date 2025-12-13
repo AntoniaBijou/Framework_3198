@@ -4,6 +4,9 @@ public class Departement {
     private int id_departement;
     private String nom;
 
+     public Departement() {
+    }
+
     public Departement(int id_departement, String nom) {
         this.id_departement = id_departement;
         this.nom = nom;
@@ -25,7 +28,6 @@ public class Departement {
         this.nom = nom;
     }
 
-    // Optionnel : garder les anciens getters pour compatibilité
     public int getId() {
         return id_departement;
     }

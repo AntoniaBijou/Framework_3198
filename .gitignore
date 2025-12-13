@@ -2,3 +2,4 @@ test/WEB-INF/lib/framework.jar
 *.jar
 *.jar
 *.jar
+test/WEB-INF/lib/framework.jar

@@ -138,8 +138,14 @@ public class AnnotationScanner {
             return false;
         }
         for (int i = 0; i < params.length - 2; i++) {
+            Parameter p = params[i];
             Class<?> type = params[i].getType();
+            // SPRINT 8 : Accepter Map<String, String>
             if (type == java.util.Map.class) {
+                continue;
+            }
+            // SPRINT 8-bis : Accepter les objets avec @ModelAttribute
+            if (p.isAnnotationPresent(ModelAttribute.class)) {
                 continue;
             }
             if (type != String.class && type != int.class && type != Integer.class) {
