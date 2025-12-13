@@ -89,8 +89,73 @@ public class FrontServlet extends HttpServlet {
                         invokeArgs.add(paramsMap);
                         injectedParams.put("Map<params>", paramsMap);
 
-                        continue; 
+                        continue;
                     }
+
+                    // ===== SPRINT 8-bis : Détection de @ModelAttribute =====
+                    ModelAttribute modelAttr = p.getAnnotation(ModelAttribute.class);
+                    if (modelAttr != null) {
+                        Class<?> modelClass = p.getType();
+
+                        try {
+                            // Créer une instance de l'objet
+                            Object modelInstance = modelClass.getDeclaredConstructor().newInstance();
+
+                            // Récupérer tous les paramètres de la requête
+                            Enumeration<String> parameterNames = req.getParameterNames();
+
+                            while (parameterNames.hasMoreElements()) {
+                                String fullParamName = parameterNames.nextElement();
+                                String paramValue = req.getParameter(fullParamName);
+
+                                // Gérer la notation pointée : departement.nom, departement.id_departement
+                                if (fullParamName.contains(".")) {
+                                    String[] parts = fullParamName.split("\\.", 2);
+                                    String objectName = parts[0]; // "departement"
+                                    String fieldName = parts[1]; // "nom" ou "id_departement"
+
+                                    // Chercher le getter de l'objet imbriqué
+                                    String getterName = "get" + capitalize(objectName);
+                                    String setterName = "set" + capitalize(objectName);
+
+                                    try {
+                                        Method getter = modelClass.getMethod(getterName);
+                                        Object nestedObject = getter.invoke(modelInstance);
+
+                                        // Si l'objet imbriqué est null, le créer
+                                        if (nestedObject == null) {
+                                            Class<?> nestedClass = getter.getReturnType();
+                                            nestedObject = nestedClass.getDeclaredConstructor().newInstance();
+
+                                            // Setter l'objet imbriqué
+                                            Method setter = modelClass.getMethod(setterName, nestedClass);
+                                            setter.invoke(modelInstance, nestedObject);
+                                        }
+
+                                        // Maintenant, set la propriété de l'objet imbriqué
+                                        setProperty(nestedObject, fieldName, paramValue);
+
+                                    } catch (Exception e) {
+                                        System.err.println("Erreur lors du traitement de " + fullParamName + ": "
+                                                + e.getMessage());
+                                    }
+                                } else {
+                                    // Propriété simple : nom, id_employe
+                                    setProperty(modelInstance, fullParamName, paramValue);
+                                }
+                            }
+
+                            invokeArgs.add(modelInstance);
+                            injectedParams.put(modelClass.getSimpleName(), modelInstance);
+
+                        } catch (Exception e) {
+                            throw new RuntimeException("Erreur lors de la création du modèle " + modelClass.getName(),
+                                    e);
+                        }
+
+                        continue;
+                    }
+
                     String paramName;
                     Object val = null;
                     boolean isPathVariable = false;
@@ -253,5 +318,44 @@ public class FrontServlet extends HttpServlet {
             }
         }
         resp.getWriter().println("<h1>Il n'y a pas de route pour l'URL : " + originalPath + "</h1>");
+    }
+
+    private static String capitalize(String str) {
+        if (str == null || str.isEmpty())
+            return str;
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
+    private static void setProperty(Object obj, String fieldName, String value) throws Exception {
+        // Construire le nom du setter : setNom, setId_employe
+        String setterName = "set" + capitalize(fieldName);
+        // Chercher le setter avec différents types
+        Method setter = null;
+        Class<?> paramType = null;
+        // Essayer avec String
+        try {
+            setter = obj.getClass().getMethod(setterName, String.class);
+            paramType = String.class;
+        } catch (NoSuchMethodException e) {
+            // Essayer avec int
+            try {
+                setter = obj.getClass().getMethod(setterName, int.class);
+                paramType = int.class;
+            } catch (NoSuchMethodException e2) {
+                // Essayer avec Integer
+                try {
+                    setter = obj.getClass().getMethod(setterName, Integer.class);
+                    paramType = Integer.class;
+                } catch (NoSuchMethodException e3) {
+                    System.err.println("Aucun setter trouvé pour : " + fieldName);
+                    return;
+                }
+            }
+        }
+        if (paramType == String.class) {
+            setter.invoke(obj, value);
+        } else if (paramType == int.class || paramType == Integer.class) {
+            setter.invoke(obj, Integer.parseInt(value));
+        }
     }
 }
