@@ -139,6 +139,9 @@ public class AnnotationScanner {
         }
         for (int i = 0; i < params.length - 2; i++) {
             Class<?> type = params[i].getType();
+            if (type == java.util.Map.class) {
+                continue;
+            }
             if (type != String.class && type != int.class && type != Integer.class) {
                 return false;
             }

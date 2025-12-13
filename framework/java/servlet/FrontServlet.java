@@ -68,9 +68,29 @@ public class FrontServlet extends HttpServlet {
                 Parameter[] params = method.getParameters();
                 List<Object> invokeArgs = new ArrayList<>();
                 Map<String, Object> injectedParams = new HashMap<>();
-
+                // sprint-8
                 for (int i = 0; i < params.length - 2; i++) {
                     Parameter p = params[i];
+                    if (p.getType() == Map.class) {
+                        Map<String, String> paramsMap = new HashMap<>();
+                        Enumeration<String> parameterNames = req.getParameterNames();
+                        while (parameterNames.hasMoreElements()) {
+                            String paramName = parameterNames.nextElement();
+                            String[] paramValues = req.getParameterValues(paramName);
+                            if (paramValues != null) {
+                                if (paramValues.length == 1) {
+                                    paramsMap.put(paramName, paramValues[0]);
+                                } else {
+                                    paramsMap.put(paramName, String.join(", ", paramValues));
+                                }
+                            }
+                        }
+
+                        invokeArgs.add(paramsMap);
+                        injectedParams.put("Map<params>", paramsMap);
+
+                        continue; 
+                    }
                     String paramName;
                     Object val = null;
                     boolean isPathVariable = false;

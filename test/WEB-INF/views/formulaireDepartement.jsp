@@ -12,8 +12,7 @@
         <input type="number" id="id_departement" name="id_departement" required><br><br>
         
         <label for="nom">Nom :</label>
-        <input type="text" id="nom" name="nom" required><br><br>
-        
+        <input type="text" id="nom" name="nom" required><br><br>    
         <button type="submit">Valider</button>
     </form>
 </body>

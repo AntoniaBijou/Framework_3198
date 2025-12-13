@@ -1,0 +1,30 @@
+Bonjour,
+nous travaillons sur un projet de mini-framework Spring Boot, et il y a également un projet de test.
+Nous avons divisé les fonctionnalités en sous-sprints, et actuellement, nous sommes au Sprint 8.
+
+Sprint 8
+Créer un formulaire, puis au niveau de la POST URL save, vérifier les arguments de la méthode save.
+Si un argument de type Map<String, String> est détecté, alors il faut récupérer les valeurs via getParameter afin d’obtenir les données envoyées.
+Détails
+Côté projet de test
+Créer un formulaire Département avec :
+un nom de département (champ libre),
+une liste d’employés (checkbox),
+un bouton Enregistrer.
+Résultat attendu :
+Paramètres reçus :
+nom : [nom du département saisi dans le formulaire]
+employés : [liste des employés cochés]
+Côté framework
+Traiter les données envoyées depuis la vue et les transmettre au contrôleur.
+Gérer le cas suivant :
+si une variable de type Map existe dans la méthode du contrôleur, avec des clés de type String et des valeurs de type String, alors il faut copier les valeurs provenant de request.getParameter dans cette Map.
+Côté projet de test (implémentation)
+Par exemple : save/map
+Lorsque la requête arrive au Front Servlet et qu’une Map est détectée :
+ne pas la laisser à null,
+créer une nouvelle Map,
+parcourir request.getParameterValues,
+récupérer le nom du paramètre et sa valeur,
+ajouter chaque paire clé/valeur dans la Map,
+puis utiliser cette Map lors de l’appel de la méthode (invoke).
