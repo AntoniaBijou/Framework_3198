@@ -6,7 +6,8 @@
 <body>
     <h1>Ajouter un Employe</h1>
     
-    <form action="${pageContext.request.contextPath}/employe/save" method="POST">
+    <form id="employeForm" action="${pageContext.request.contextPath}/employe/save" method="POST">
+        <input type="hidden" name="format" id="formatInput" value="">
         <div class="section">
             <h3>Informations de l'employe</h3>
             
@@ -36,6 +37,13 @@
         </div>
         
         <button type="submit">Enregistrer</button>
+        <button type="button" onclick="submitAsJson()">Enregistrer (JSON)</button>
     </form>
+    <script>
+        function submitAsJson() {
+            document.getElementById('formatInput').value = 'json';
+            document.getElementById('employeForm').submit();
+        }
+    </script>
 </body>
 </html>
