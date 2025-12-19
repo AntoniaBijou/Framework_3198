@@ -211,6 +211,35 @@ public class FrontServlet extends HttpServlet {
                 Object result = method.invoke(instance, invokeArgs.toArray());
                 if (result instanceof String) {
                     String viewName = (String) result;
+
+                    // Support for JSON responses: either via ?format=json or Accept header
+                    String format = req.getParameter("format");
+                    String acceptHeader = req.getHeader("Accept");
+                    boolean wantJson = (format != null && "json".equalsIgnoreCase(format))
+                            || (acceptHeader != null && acceptHeader.contains("application/json"));
+
+                    if (wantJson) {
+                        Map<String, Object> json = new LinkedHashMap<>();
+                        json.put("code", 200);
+                        Object msg = req.getAttribute("message");
+                        json.put("message", msg != null ? msg.toString() : "");
+
+                        Map<String, Object> data = new LinkedHashMap<>();
+                        Enumeration<String> attrNames = req.getAttributeNames();
+                        while (attrNames.hasMoreElements()) {
+                            String attr = attrNames.nextElement();
+                            if (!"message".equals(attr)) {
+                                data.put(attr, req.getAttribute(attr));
+                            }
+                        }
+                        json.put("data", data);
+
+                        resp.setContentType("application/json; charset=UTF-8");
+                        resp.setStatus(200);
+                        resp.getWriter().println(JsonUtil.toJson(json));
+                        return;
+                    }
+
                     String jspPath = "/WEB-INF/views/" + viewName + ".jsp";
                     String realJspPath = getServletContext().getRealPath(jspPath);
                     resp.getWriter().println("<h1>Route supportee : " + path + "</h1>");
@@ -240,7 +269,21 @@ public class FrontServlet extends HttpServlet {
                     }
                 }
             } catch (Exception e) {
-                resp.getWriter().println("Erreur invocation : " + e.getMessage());
+                String formatErr = req.getParameter("format");
+                String acceptErr = req.getHeader("Accept");
+                boolean wantJsonErr = (formatErr != null && "json".equalsIgnoreCase(formatErr))
+                        || (acceptErr != null && acceptErr.contains("application/json"));
+                if (wantJsonErr) {
+                    Map<String, Object> jsonErr = new LinkedHashMap<>();
+                    jsonErr.put("code", 500);
+                    jsonErr.put("message", "Erreur invocation: " + e.getMessage());
+                    jsonErr.put("data", Collections.emptyMap());
+                    resp.setContentType("application/json; charset=UTF-8");
+                    resp.setStatus(500);
+                    resp.getWriter().println(JsonUtil.toJson(jsonErr));
+                } else {
+                    resp.getWriter().println("Erreur invocation : " + e.getMessage());
+                }
                 e.printStackTrace();
             }
         } else {

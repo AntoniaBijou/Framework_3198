@@ -1,0 +1,10 @@
+Sprint-9:
+L'objectif du sprint9 est d'implementer une format json, dans le framework , creer la fonction et la logique pour faire ça, puis dans le dossier test 
+creer une formulaire d'employer puis retourner une format json avec le code statut , message (error or succes) ,... 
+
+---
+Implementation notes:
+- Added `servlet.JsonUtil` to serialize objects to JSON.
+- Updated `servlet.FrontServlet` to return JSON when `?format=json` is present (or Accept header contains application/json). JSON payload contains `code`, `message`, and `data` (request attributes).
+- Modified `test` form `formulaireEmploye.jsp` to allow submitting as JSON (button "Enregistrer (JSON)").
+- Error handling returns JSON with `code` 500 and `message` when requested as JSON.
