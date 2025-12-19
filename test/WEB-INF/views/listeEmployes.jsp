@@ -7,7 +7,6 @@
 </head>
 <body>
     <h1>Liste des Employes</h1>
-    <h1>ETU003198</h1>
     
     <% if (request.getAttribute("message") != null) { %>
         <div class="message">${message}</div>
