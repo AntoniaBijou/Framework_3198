@@ -4,16 +4,10 @@
         </html>
 
         <body>
-            </head>
-            <title>Resultat Upload</title>
 
             <head>
-                <html>
-                <html>
-
-                <head>
-                    <title>Resultat Upload</title>
-                </head>
+                <title>Resultat Upload</title>
+            </head>
 
             <body>
                 <h1>Resultat de l'upload</h1>
@@ -29,4 +23,4 @@
             </body>
         </body>
 
-            </html>
+        </html>
