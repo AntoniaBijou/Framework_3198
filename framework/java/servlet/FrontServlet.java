@@ -393,8 +393,8 @@ public class FrontServlet extends HttpServlet {
     }
 
     private static void setProperty(Object obj, String fieldName, String value) throws Exception {
-        // Construire le nom du setter : setNom, setId_employe
         String setterName = "set" + capitalize(fieldName);
+        // Construire le nom du setter : setNom, setId_employe
         // Chercher le setter avec différents types
         Method setter = null;
         Class<?> paramType = null;
