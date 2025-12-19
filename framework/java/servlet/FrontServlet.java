@@ -9,10 +9,12 @@ import java.lang.reflect.Parameter;
 import java.util.*;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+@MultipartConfig(fileSizeThreshold = 1024 * 1024, maxFileSize = 10 * 1024 * 1024, maxRequestSize = 20 * 1024 * 1024)
 public class FrontServlet extends HttpServlet {
     private List<RouteInfo> routes;
 
@@ -360,6 +362,27 @@ public class FrontServlet extends HttpServlet {
                 return;
             }
         }
+
+        // Try to serve files under the webapp root (ex: /uploads/filename)
+        String altRealPath = getServletContext().getRealPath("/" + cleanPath);
+        if (altRealPath != null) {
+            File altFile = new File(altRealPath);
+            if (altFile.exists() && altFile.isFile()) {
+                String mime = getServletContext().getMimeType(altFile.getName());
+                if (mime != null)
+                    resp.setContentType(mime);
+                try (FileInputStream fis = new FileInputStream(altFile);
+                        OutputStream os = resp.getOutputStream()) {
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = fis.read(buffer)) != -1) {
+                        os.write(buffer, 0, bytesRead);
+                    }
+                }
+                return;
+            }
+        }
+
         resp.getWriter().println("<h1>Il n'y a pas de route pour l'URL : " + originalPath + "</h1>");
     }
 

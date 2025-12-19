@@ -8,3 +8,11 @@ Implementation notes:
 - Updated `servlet.FrontServlet` to return JSON when `?format=json` is present (or Accept header contains application/json). JSON payload contains `code`, `message`, and `data` (request attributes).
 - Modified `test` form `formulaireEmploye.jsp` to allow submitting as JSON (button "Enregistrer (JSON)").
 - Error handling returns JSON with `code` 500 and `message` when requested as JSON.
+
+---
+Sprint-10 implementation notes (upload):
+- Added `@MultipartConfig` on `FrontServlet` to enable file uploads via `HttpServletRequest.getPart`.
+- Added `test/java/controller/FileController.java` with routes `/file/upload` (GET) and `/file/save` (POST) to handle upload logic and save files to `uploads/` in the webapp root.
+- Added `test/WEB-INF/views/uploadForm.jsp` and `test/WEB-INF/views/fileResult.jsp`.
+- `FrontServlet.chercherRessource` now tries to serve files under the webapp root (so `/uploads/<file>` is accessible).
+- Upload form supports `format=json` submission (button "Uploader (JSON)") and the framework's existing JSON response will return `code`, `message`, and `data` containing file info.
